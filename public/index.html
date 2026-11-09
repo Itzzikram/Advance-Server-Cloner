@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SERVER CLONER — Clone Your Discord Server</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #fbf4f9;
+    --side: #fbeef7;
+    --card: #ffffff;
+    --ink: #3d1a3a;
+    --ink-soft: #8a6787;
+    --pink: #c13d7a;
+    --pink-soft: #f5dcec;
+    --purple: #7a2f8a;
+    --border: #f0dcec;
+    --input: #fbf3f9;
+    --shadow: 0 6px 24px rgba(150, 40, 110, 0.08);
+    --green: #23a55a;
+    --red: #e23b57;
+    --yellow: #d98a12;
+    --log-bg: #fcf2f8;
+  }
+  html[data-theme="dark"] {
+    --bg: #17121b; --side: #1c1522; --card: #221926; --ink: #f3e8f2; --ink-soft: #b596b3;
+    --pink-soft: #3a2140; --border: #33263a; --input: #1c141f; --shadow: 0 6px 24px rgba(0,0,0,.35);
+    --log-bg: #140f18;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Poppins', system-ui, sans-serif; background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; }
+  .app { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar { background: var(--side); border-right: 1px solid var(--border); padding: 20px 16px; display: flex; flex-direction: column; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 16px; letter-spacing: .3px; padding: 4px 8px 18px; }
+  .logo { width: 30px; height: 30px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ff9ecb, #c13d7a); display: grid; place-items: center; color: #fff; font-size: 14px; }
+  .srv-select { display: flex; gap: 8px; margin-bottom: 18px; }
+  .srv-select select { flex: 1; padding: 9px 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--card); color: var(--ink); font-family: inherit; font-size: 13px; }
+  .srv-select button { border: 1px solid var(--border); background: var(--card); border-radius: 10px; padding: 0 10px; cursor: pointer; color: var(--ink-soft); }
+  .nav-label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-soft); margin: 16px 8px 8px; font-weight: 600; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; color: var(--ink-soft); font-size: 14px; font-weight: 500; cursor: pointer; margin-bottom: 2px; }
+  .nav-item:hover { background: var(--pink-soft); color: var(--pink); }
+  .nav-item.active { background: var(--card); color: var(--pink); font-weight: 600; box-shadow: var(--shadow); }
+  .side-foot { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 10px 8px 0; border-top: 1px solid var(--border); }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #c13d7a, #7a2f8a); display: grid; place-items: center; color: #fff; font-size: 13px; }
+
+  /* ---------- Main ---------- */
+  .main { display: flex; flex-direction: column; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 26px; border-bottom: 1px solid var(--border); background: var(--card); }
+  .topbar h1 { font-size: 17px; font-weight: 700; }
+  .content { padding: 22px 26px; display: grid; grid-template-columns: 1fr 420px; gap: 22px; align-items: start; }
+  @media (max-width: 1100px) { .content { grid-template-columns: 1fr; } }
+  @media (max-width: 820px) { .app { grid-template-columns: 1fr; } .sidebar { display: none; } }
+
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow); }
+  .card-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid var(--border); }
+  .card-head h2 { font-size: 16px; font-weight: 700; }
+  .card-head p { font-size: 12.5px; color: var(--ink-soft); margin-top: 2px; }
+  .card-body { padding: 20px; }
+
+  .btn { border: none; cursor: pointer; font-family: inherit; font-weight: 600; font-size: 13px; padding: 9px 18px; border-radius: 10px; transition: transform .1s, box-shadow .1s, opacity .1s; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+  .btn-primary { background: linear-gradient(135deg, #c13d7a, #7a2f8a); color: #fff; box-shadow: 0 5px 14px rgba(160,50,120,.3); }
+  .btn-ghost { background: var(--card); color: var(--ink); border: 1px solid var(--border); }
+
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 8px; }
+  @media (max-width: 620px) { .duo { grid-template-columns: 1fr; } }
+  label { display: block; font-size: 12px; font-weight: 600; color: var(--ink-soft); margin: 14px 0 6px; }
+  .duo label:first-child, .subcard label:first-of-type { margin-top: 0; }
+  input[type=text], input[type=password], select {
+    width: 100%; padding: 11px 13px; background: var(--input); border: 1px solid var(--border);
+    border-radius: 10px; color: var(--ink); font-size: 13.5px; font-family: inherit; outline: none;
+  }
+  input:focus, select:focus { border-color: var(--pink); }
+  .hint { font-size: 11px; color: var(--ink-soft); margin-top: 5px; }
+
+  .subcard { border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-top: 18px; }
+  .subcard-head { display: flex; align-items: center; justify-content: space-between; }
+  .subcard-head .t { font-size: 14px; font-weight: 700; }
+  .subcard-head .s { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+  .badge { font-size: 10.5px; background: var(--pink-soft); color: var(--pink); padding: 3px 9px; border-radius: 20px; font-weight: 600; }
+
+  /* toggle rows */
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; margin-top: 10px; font-size: 13.5px; font-weight: 500; }
+  .toggle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .toggle-grid .toggle-row { margin-top: 0; }
+  @media (max-width: 620px) { .toggle-grid { grid-template-columns: 1fr; } }
+  .switch { position: relative; width: 20px; height: 20px; }
+  .switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+  .box { width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--border); background: var(--input); display: grid; place-items: center; }
+  .switch input:checked + .box { background: var(--pink); border-color: var(--pink); }
+  .switch input:checked + .box::after { content: '✓'; color: #fff; font-size: 12px; font-weight: 700; }
+
+  /* logs */
+  .logs { background: var(--log-bg); border: 1px solid var(--border); border-radius: 12px; margin: 0 20px 20px; padding: 14px; height: 460px; overflow-y: auto; font-family: 'Consolas', monospace; font-size: 12.5px; white-space: pre-wrap; word-break: break-word; color: var(--ink-soft); }
+  .l { margin-bottom: 4px; display: flex; gap: 8px; }
+  .l .tm { color: var(--ink-soft); opacity: .7; flex-shrink: 0; }
+  .l.success .tx { color: var(--green); }
+  .l.warn .tx { color: var(--yellow); }
+  .l.error .tx { color: var(--red); }
+  .status { font-size: 12.5px; color: var(--ink-soft); font-weight: 500; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--ink-soft); margin-right: 6px; }
+  .dot.run { background: var(--yellow); animation: pulse 1s infinite; } .dot.ok { background: var(--green); } .dot.err { background: var(--red); }
+  @keyframes pulse { 50% { opacity: .3; } }
+
+  .warn { display: flex; gap: 8px; background: rgba(217,138,18,.1); border: 1px solid rgba(217,138,18,.3); color: var(--yellow); padding: 11px 14px; border-radius: 12px; font-size: 12px; margin-bottom: 16px; }
+  details.api { margin-top: 16px; font-size: 12px; }
+  details.api summary { cursor: pointer; color: var(--ink-soft); font-weight: 600; }
+  details.api .row { display: flex; gap: 8px; margin-top: 10px; }
+  .icon-btn { background: none; border: none; cursor: pointer; color: var(--ink-soft); font-size: 18px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand"><span class="logo">🌀</span> SERVER CLONER</div>
+    <div class="srv-select">
+      <select><option>Source Account</option></select>
+      <button title="Refresh">⟳</button>
+    </div>
+    <div class="nav-item">📊 Dashboard</div>
+    <div class="nav-item active">🧬 Clone Server</div>
+    <div class="nav-item">💬 Clone Messages</div>
+    <div class="nav-item">📦 Subscriptions</div>
+    <div class="nav-item">👑 Premium</div>
+    <div class="nav-label">Support &amp; Community</div>
+    <div class="nav-item">📘 Guide</div>
+    <div class="nav-item">🛟 Support Server</div>
+    <div class="nav-item">⭐ Leave a Review</div>
+    <div class="side-foot"><span class="avatar">U</span><span style="font-size:13px;font-weight:600;">user</span></div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <h1>🧬 Clone Server</h1>
+      <button class="icon-btn" id="themeToggle" title="Toggle theme">🌙</button>
+    </div>
+
+    <div class="content">
+      <!-- Config card -->
+      <section class="card">
+        <div class="card-head">
+          <div>
+            <h2>Clone Server</h2>
+            <p>Select cloning options</p>
+          </div>
+          <button class="btn btn-primary" id="startBtn">🚀 Start Clone</button>
+        </div>
+        <div class="card-body">
+          <div class="warn">⚠️ Using user tokens (selfbots) breaks Discord's ToS and can get your account banned. Only clone servers you own. Tokens are never stored.</div>
+
+          <div class="duo">
+            <div>
+              <label>Source Token</label>
+              <input type="password" id="sourceToken" placeholder="Account token to clone FROM" autocomplete="off" />
+            </div>
+            <div>
+              <label>Target Token</label>
+              <input type="password" id="targetToken" placeholder="Account token to clone TO" autocomplete="off" />
+            </div>
+          </div>
+          <div class="duo">
+            <div>
+              <label>Clone From (Source Server ID)</label>
+              <input type="text" id="sourceGuildId" placeholder="123456789012345678" autocomplete="off" />
+            </div>
+            <div>
+              <label>Clone To (Target Server ID)</label>
+              <input type="text" id="targetGuildId" placeholder="Empty = create a NEW server" autocomplete="off" />
+            </div>
+          </div>
+          <div class="duo">
+            <div>
+              <label>Run Mode</label>
+              <select id="mode">
+                <option value="fromStart">From start — delete existing, clone fresh</option>
+                <option value="resume">Resume — keep existing, add only missing</option>
+              </select>
+            </div>
+            <div>
+              <label>Proxy (optional)</label>
+              <input type="text" id="proxy" placeholder="host:port:user:pass" autocomplete="off" />
+            </div>
+          </div>
+
+          <!-- Server settings -->
+          <div class="subcard">
+            <div class="subcard-head">
+              <div><div class="t">Server Settings</div><div class="s">Which server profile settings to copy.</div></div>
+              <label class="switch"><input type="checkbox" id="cloneGuildSettings" checked /><span class="box"></span></label>
+            </div>
+            <div class="toggle-row">Clone Channels <label class="switch"><input type="checkbox" id="cloneChannels" checked /><span class="box"></span></label></div>
+            <div class="toggle-row">Clone Roles <label class="switch"><input type="checkbox" id="cloneRoles" checked /><span class="box"></span></label></div>
+            <div class="toggle-row">Clone Role Icons <label class="switch"><input type="checkbox" id="cloneRoleIcons" checked /><span class="box"></span></label></div>
+          </div>
+
+          <!-- What else -->
+          <div class="subcard">
+            <div class="subcard-head">
+              <div><div class="t">Assets</div><div class="s">Emojis and stickers to copy over.</div></div>
+              <span class="badge">Selected</span>
+            </div>
+            <div class="toggle-grid">
+              <div class="toggle-row">Emojis <label class="switch"><input type="checkbox" id="cloneEmojis" checked /><span class="box"></span></label></div>
+              <div class="toggle-row">Stickers <label class="switch"><input type="checkbox" id="cloneStickers" checked /><span class="box"></span></label></div>
+            </div>
+          </div>
+
+          <div class="run-row" style="display:flex;align-items:center;gap:14px;margin-top:18px;">
+            <span class="status"><span class="dot" id="dot"></span><span id="status">Idle</span></span>
+          </div>
+
+          <details class="api">
+            <summary>⚙️ Backend URL (set when UI is hosted on Vercel, backend on Railway)</summary>
+            <div class="row">
+              <input type="text" id="apiBase" placeholder="https://your-app.up.railway.app (empty = same server)" />
+              <button class="btn btn-ghost" id="saveApi">Save</button>
+            </div>
+            <div class="hint">This page (UI) can live on Vercel. The cloning engine must run on an always-on host like Railway. Point this at your Railway URL.</div>
+          </details>
+        </div>
+      </section>
+
+      <!-- Logs card -->
+      <section class="card">
+        <div class="card-head">
+          <div>
+            <h2>Clone Logs</h2>
+            <p>Progress and details of your cloning operation.</p>
+          </div>
+          <button class="btn btn-ghost" id="clearLogs">Clear logs</button>
+        </div>
+        <div class="logs" id="logs"></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Theme
+  const themeToggle = document.getElementById('themeToggle');
+  if (localStorage.getItem('theme') === 'dark') { document.documentElement.setAttribute('data-theme','dark'); themeToggle.textContent='☀️'; }
+  themeToggle.addEventListener('click', () => {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+    themeToggle.textContent = dark ? '🌙' : '☀️';
+    localStorage.setItem('theme', dark ? 'light' : 'dark');
+  });
+
+  // API base
+  const apiBaseInput = document.getElementById('apiBase');
+  apiBaseInput.value = localStorage.getItem('apiBase') || '';
+  document.getElementById('saveApi').addEventListener('click', () => {
+    localStorage.setItem('apiBase', apiBaseInput.value.trim().replace(/\/$/, ''));
+    connectLogs(); addLog('info', 'Backend URL saved. Reconnected log stream.');
+  });
+  const api = (p) => (localStorage.getItem('apiBase') || '').replace(/\/$/, '') + p;
+
+  // Logs
+  const logsEl = document.getElementById('logs');
+  const statusEl = document.getElementById('status');
+  const dotEl = document.getElementById('dot');
+  const startBtn = document.getElementById('startBtn');
+  let es;
+  function addLog(level, message) {
+    const now = new Date().toLocaleTimeString('en-GB');
+    const div = document.createElement('div');
+    div.className = 'l ' + (level || 'info');
+    div.innerHTML = '<span class="tm">' + now + '</span><span class="tx">● ' + message.replace(/</g,'&lt;') + '</span>';
+    logsEl.appendChild(div);
+    logsEl.scrollTop = logsEl.scrollHeight;
+  }
+  function setStatus(t, c) { statusEl.textContent = t; dotEl.className = 'dot' + (c ? ' ' + c : ''); }
+  document.getElementById('clearLogs').addEventListener('click', () => { logsEl.innerHTML = ''; });
+  function connectLogs() {
+    if (es) es.close();
+    es = new EventSource(api('/api/logs'));
+    es.onmessage = (e) => { try { const d = JSON.parse(e.data); addLog(d.level, d.message); } catch {} };
+    es.onerror = () => addLog('warn', '[log stream disconnected — retrying]');
+  }
+  connectLogs();
+
+  const val = (id) => document.getElementById(id).value.trim();
+  const chk = (id) => document.getElementById(id).checked;
+
+  startBtn.addEventListener('click', async () => {
+    const payload = {
+      sourceToken: val('sourceToken'), targetToken: val('targetToken'),
+      sourceGuildId: val('sourceGuildId'), targetGuildId: val('targetGuildId'),
+      proxy: val('proxy'), mode: document.getElementById('mode').value,
+      options: {
+        cloneChannels: chk('cloneChannels'), cloneRoles: chk('cloneRoles'),
+        cloneRoleIcons: chk('cloneRoleIcons'), cloneGuildSettings: chk('cloneGuildSettings'),
+        cloneEmojis: chk('cloneEmojis'), cloneStickers: chk('cloneStickers'),
+      },
+    };
+    startBtn.disabled = true; setStatus('Starting...', 'run');
+    try {
+      const r = await fetch(api('/api/clone'), { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      const data = await r.json();
+      if (!r.ok || !data.success) { addLog('error', 'Error: ' + (data.error || 'Request failed')); setStatus('Failed','err'); startBtn.disabled=false; return; }
+      setStatus('Running...', 'run'); addLog('info', data.message || 'Clone started.');
+    } catch (err) {
+      addLog('error', 'Network error: ' + err.message + ' — is the backend URL correct?'); setStatus('Failed','err'); startBtn.disabled=false;
+    }
+  });
+
+  new MutationObserver(() => {
+    const last = logsEl.lastElementChild;
+    if (last && /Session ended|Clone completed|Clone failed|Fatal error/.test(last.textContent)) {
+      startBtn.disabled = false;
+      if (/completed/.test(last.textContent)) setStatus('Done','ok');
+      else if (/failed|error/i.test(last.textContent)) setStatus('Failed','err');
+      else setStatus('Idle','');
+    }
+  }).observe(logsEl, { childList: true });
+</script>
+</body>
+</html>
