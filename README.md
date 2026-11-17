@@ -268,7 +268,7 @@ The v3.0 Enterprise ships with a full **cinematic web dashboard** featuring:
 
 ---
 
-### 💰 Get v3.0 Enterprise — Source Code
+### 💰 Get v3.0 Enterprise — Source Code 100$
 
 **One-time purchase** — you receive the full source code, lifetime access, no subscriptions.
 
